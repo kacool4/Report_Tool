@@ -155,9 +155,9 @@
                                                                Type,
                                                                @{N="IP Address";E={$nic = $_; ($vm.Guest.Nics | where{$_.Device.Name -eq $nic.Name}).IPAddress -join '|'}},
                                                                MacAddress,
+                                                               @{N='Network';E={$_.NetworkName}},
                                                                @{N='Connected';E={$_.ConnectionState.Connected}},
-                                                               @{N='Connected at Power on';E={$_.ConnectionState.StartConnected}},
-                                                               @{N='Network';E={$_.NetworkName}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'VM Network'
+                                                               @{N='Connected at Power on';E={$_.ConnectionState.StartConnected}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'VM Network'
       
     Write-Host "(3/18) Network Info Completed."  
 
