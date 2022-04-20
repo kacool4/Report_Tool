@@ -66,7 +66,7 @@
     if ($help)
     {
         Write-Host
-        Write-Host " Dont use any param, By default it will run the script asks for credentials but no mail will be sent."
+        Write-Host " No param used, By default it will run the script asks for credentials but no mail will be sent."
         Write-Host
         Write-Host " Use param -noconnection in order to run the script when you are already logged in a vCenter. No mail will be sent. Suitable only if you want results for the current vCenter. List.txt MUST be filled with the hostname for the vCenter"
         Write-Host
@@ -108,12 +108,13 @@
 
     if (!($Connect) -or ($sent_mail)) {
        Write-Host "Connecting to vCenter..."
-       Connect-VIServer -Server $vCenter
-       Write-Host "Starting script......."
+       $creds = Get-VICredentialStoreItem -file "C:\Scripts\AniaTools\credfile.xml"
+       Connect-VIServer -Server $creds.Host -User $creds.User -Password $creds.Password
+        Write-Host "Starting script......."
     }  
 
     ######## VM Info output ##################################################################################################
-    Write-Host "(1/18) Gathering VM Info..."
+    Write-Host "(1/19) Gathering VM Info..."
 
     Get-VM | Select Name,
                     PowerState,
@@ -126,12 +127,25 @@
                     @{N='Hardware Version'; E={$_.version}},
                     @{N=’Datastore’;E={[string]::join(“;”, (Get-Datastore -VM $_))}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'VM Info'
     
-    Write-Host "(1/18) VM Info Completed"     
+    Write-Host "(1/19) VM Info Completed"     
     
-               
+
+    ######## Template Info output ##################################################################################################
+
+    Write-Host "(2/19) Gathering Template Info..."
+
+    Get-Template | Select Name,
+                          @{N="CPU";E={$_.ExtensionData.Config.Hardware.NumCPU}},
+                          @{N="Memory";E={$_.ExtensionData.Config.Hardware.MemoryMB}},
+                          @{N="Storage (GB)";E={[Math]::Round(($_.ExtensionData.Summary.Storage.Committed/1GB),1)}}, 
+                          @{N="Host";E={(Get-VMhost -id $_.HostID).Name}}, 
+                          @{N="Datastore"; E={(Get-Datastore -id $_.DatastoreIDlist).Name -join ","}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'Template Info'
+   
+    Write-Host "(2/19) Template Info Completed"        
+    
     ######## Disk Info output ##################################################################################################
 
-    Write-Host "(2/18) Gathering Disk Info..."
+    Write-Host "(3/19) Gathering Disk Info..."
 
     Get-VM | Get-HardDisk |Select @{N='VM';E={$_.Parent}}, 
                                   @{N='Disk ID';E={$_.Name}}, 
@@ -143,11 +157,11 @@
                                                "$($ctrl.BusNumber):$($_.ExtensionData.UnitNumber)"}},
                                   @{N='VMDK Location';E={$_.Filename}}| Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'VM Disk'
     
-    Write-Host "(2/18) Disk Info Completed"                             
+    Write-Host "(3/19) Disk Info Completed"                             
     
     ######## VM Network Info output ############################################################################################                            
     
-    Write-Host "(3/18) Gathering Network Info..."
+    Write-Host "(4/19) Gathering Network Info..."
 
     Get-VM -PipelineVariable vm | Get-NetworkAdapter | Select @{N='VM Name';E={$vm.Name}},
                                                                @{N='Power State';E={$vm.Powerstate}},
@@ -158,14 +172,14 @@
                                                                @{N='Network';E={$_.NetworkName}},
                                                                @{N='Connected';E={$_.ConnectionState.Connected}},
                                                                @{N='Connected at Power on';E={$_.ConnectionState.StartConnected}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'VM Network'
-      
-    Write-Host "(3/18) Network Info Completed."  
+                                                               
+    Write-Host "(4/19) Network Info Completed."  
 
 
                                                                
     ######## ESXi and Cluster output ########################################################################################
 
-    Write-Host "(4/18) Gathering ESXi and Cluster Info..."
+    Write-Host "(5/19) Gathering ESXi and Cluster Info..."
 
     Get-VMHost | select @{N='Datacenter';E={@(Get-Datacenter -vmhost $_.name)}}, 
                         @{N='Cluster';E={@($_.Parent)}},   
@@ -187,13 +201,13 @@
                         @{N="BIOS Release Date";E={$_.ExtensionData.Hardware.BiosInfo.releaseDate}},
                         @{N='CPU Type';E={$_.ProcessorType}} | Sort-Object Datacenter,Cluster| Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'ESXi And Cluster'
     
-    Write-Host "(4/18) ESXi and Cluster Info Completed."
+    Write-Host "(5/19) ESXi and Cluster Info Completed."
 
 
                                                
     ######## Datastore output #################################################################################################
 
-    Write-Host "(5/18) Gathering Datastore Info..."
+    Write-Host "(6/19) Gathering Datastore Info..."
 
     Get-Datastore | Select Name,
                         @{N='NAA Address ';E={$_.ExtensionData.Info.Vmfs.Extent[0].DiskName}},
@@ -204,22 +218,22 @@
                         @{N='DS Cluster'; E={Get-Datastorecluster -Datastore $_}},
                         @{N=’Hosts’;E={[string]::join(“;”,(Get-Datastore $_ | Get-VMHost))}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'Datastores'
     
-    Write-Host "(5/18) Datastore Info Completed"
+    Write-Host "(6/19) Datastore Info Completed"
                         
     ######## VM Tools output ###################################################################################################
     
-    Write-Host "(6/18) Gathering VMTools Info..."
+    Write-Host "(7/19) Gathering VMTools Info..."
     
     Get-VM | % { get-view $_.id } | select name, 
                                    @{N='Tools Version'; E={$_.config.tools.toolsversion}}, 
                                    @{N='Tool Status'; E={$_.Guest.ToolsStatus}},
                                    @{N='Version Status'; E={$_.Guest.ToolsVersionStatus}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'VMTools'
      
-    Write-Host "(6/18) VMTools Info Completed" 
+    Write-Host "(7/19) VMTools Info Completed" 
                                    
     ########### NIC output ########################################################################################################
 
-    Write-Host "(7/18) Gathering NIC Info..."
+    Write-Host "(8/19) Gathering NIC Info..."
 
     $vmhosts = Get-VMHost | Where{$_.ConnectionState -eq 'Connected'}
     $OutputNIC = @()
@@ -244,12 +258,12 @@
  
      }
    
-    Write-Host "(7/18) NIC Info Completed."
+    Write-Host "(8/19) NIC Info Completed."
    
      
     ######## HBA output ###########################################################################################################
   
-    Write-Host "(8/18) Gathering HBA Info..."
+    Write-Host "(9/19) Gathering HBA Info..."
 
     $HBAHosts = Get-VMHost | Where{$_.ConnectionState -eq 'Connected'} 
     $OutputHBA = @()
@@ -272,41 +286,41 @@
      }
     }
 
-    Write-Host "(8/18) HBA Info Completed."
+    Write-Host "(9/19) HBA Info Completed."
 
 
 
-    ######## HBA WWN/WWP output ###########################################################################################################
+    ######## HBA WWN/WWNP output ###########################################################################################################
   
-    Write-Host "(9/18) Gathering WWN Info..."
+    Write-Host "(10/19) Gathering WWN/WWPN Info..."
    
     Get-VMhost | Get-VMHostHBA -Type FibreChannel | Select VMHost,
                                                            Device,
                                                            @{N='Status';E={$_.Status}},
                                                            @{N='Driver';E={$_.Driver}},
-                                                           @{N='Model';E={$_.Model}},
+                                                           @{N='Model';E={$_.Model}}
                                                            @{N="WWN";E={"{0:X}"-f$_.NodeWorldWideName}},
-                                                           @{N="WWP";E={"{0:X}"-f$_.PortWorldWideName}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'WWN_WWP Info'
+                                                           @{N="WWP";E={"{0:X}"-f$_.PortWorldWideName}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'WWN_WWPN Info'
 
-    Write-Host "(9/18) WWN Info Completed."
+    Write-Host "(10/19) WWN/WWPN Info Completed."
 
 
 
     ######## ATS Heart Beat  ###########################################################################################################
   
-    Write-Host "(10/18) Gathering ATS Info..."
+    Write-Host "(11/19) Gathering ATS Info..."
 
     Get-VMHost | Get-AdvancedSetting -Name VMFS3.UseATSForHBOnVMFS5 | select @{N='Host';E={$_.Entity}},
-                                                                              @{N='ATS Heart Beat';E={$_.Name}}, 
-                                                                              @{N='0=Disabled/1=Enabled';E={$_.Value}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'ATS HB Info'
+                                                                             @{N='ATS Heart Beat';E={$_.Name}}, 
+                                                                             @{N='0=Disabled/1=Enabled';E={$_.Value}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'ATS HB Info'
 
-    Write-Host "(10/18) ATS Info Completed."
+    Write-Host "(11/19) ATS Info Completed."
 
 
 
     ######## VMKernel Adapterstput #####################################################################################################
  
-    Write-Host "(11/18) Gathering VMKernel Info..."
+    Write-Host "(12/19) Gathering VMKernel Info..."
 
     Get-VMHostNetworkAdapter -VMKernel | select @{N='ESXi Host';E={$_.VMHost}},
                                                  @{N='Device Name';E={$_.DeviceName}},
@@ -315,13 +329,13 @@
                                                  @{N='SubNet Mask';E={$_.SubnetMask}},
                                                  @{N='Port Group';E={$_.PortGroupName}} | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'VMKernel Adapters'
      
-    Write-Host "(11/18) VMKernel Info Completed." 
+    Write-Host "(12/19) VMKernel Info Completed." 
                                                  
 
 
     ######## Distributed Switches output ###########################################################################################
 
-    Write-Host "(12/18) Gathering vDS Info..."
+    Write-Host "(13/19) Gathering vDS Info..."
 
     Get-VDPortgroup  | select @{N='Datacenter';E={$_.Datacenter}},
                               @{N='vLan Name';E={$_.Name}},
@@ -332,13 +346,13 @@
                               @{N='Forged Transmits';E={$_.Extensiondata.Config.DefaultPortConfig.SecurityPolicy.ForgedTransmits.Value}}, 
                               @{N='Mac Changes';E={$_.Extensiondata.Config.DefaultPortConfig.SecurityPolicy.MacChanges.Value}} | Sort-Object Datacenter,'vSwitch Name' |  Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'vDS'
     
-    Write-Host "(12/18) vDS Info Completed."
+    Write-Host "(13/19) vDS Info Completed."
                                  
 
 
     ######## Nics Assign to Distributed Switches output ################################################################################
    
-    Write-Host "(13/18) Gathering vDS Nics Info..."
+    Write-Host "(14/19) Gathering vDS Nics Info..."
     
     $Nic_vDS = @()
     foreach($sw in (Get-VirtualSwitch -Distributed)){
@@ -359,14 +373,14 @@
     }
     $Nic_vDS | Sort-Object Host | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'Nics vDS'
    
-    Write-Host "(13/18) vDS Nics Info Completed."
+    Write-Host "(14/19) vDS Nics Info Completed."
 
 
 
 
     ######## Standard Switches output ########################################################################################
   
-    Write-Host "(14/18) Gathering vSS Info..."
+    Write-Host "(15/19) Gathering vSS Info..."
 
     $vmhosts_vss = Get-VMHost
     foreach ($ESXHost in $vmhosts_vss) {
@@ -377,13 +391,13 @@
                                                                    @{N='Vlan';E={$_.vlanid}} | Sort-Object Host,VirstualSwitch | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'vSS'                                                                                                           
     }
 
-    Write-Host "(14/18) vSS Info Completed."
+    Write-Host "(15/19) vSS Info Completed."
 
 
 
     ######## Nics Assign to Standard Switches output ################################################################################
     
-    Write-Host "(15/18) vSS Nics Info..."
+    Write-Host "(16/19) vSS Nics Info..."
 
     foreach($esx in Get-VMHost){
         $vNicTab = @{}
@@ -401,13 +415,13 @@
         }
     }
 
-    Write-Host "(15/18) vSS Nics Info Completed."
+    Write-Host "(16/19) vSS Nics Info Completed."
 
 
     
     ######## Licenses output ####################################################################################################
 
-    Write-Host "(16/18) Gathering Licenses Info..."
+    Write-Host "(17/19) Gathering Licenses Info..."
 
         $LINfo = @()
         foreach ($licenseManager in (Get-View LicenseManager)){
@@ -450,13 +464,13 @@
          } 
          $LINfo | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'Licenses'
          
-     Write-Host "(16/18) Licenses Info Completed."          
+     Write-Host "(17/19) Licenses Info Completed."          
 
 
     
      ######## Snapshots output ###################################################################################################
 
-     Write-Host "(17/18) Gathering Snapshot Info..."
+     Write-Host "(18/19) Gathering Snapshot Info..."
      
      Get-VM | Sort Name | Get-Snapshot | Where { $_.Name.Length -gt 0 } | Select VM,
                                                                                 Name,
@@ -464,13 +478,13 @@
                                                                                 Description,
                                                                                 @{N='SizeGB';E={[math]::Round(($_.SizeMB/1024),2)}}  | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'Snapshots'
      
-    Write-Host "(17/18) Snapshot Info Completed." 
+    Write-Host "(18/19) Snapshot Info Completed." 
 
 
                                                                                 
     ######## Zombie VMDKs output ####################################################################################################
 
-    Write-Host "(18/18) Gathering Zombie Disk Info..."
+    Write-Host "(19/19) Gathering Zombie Disk Info..."
 
     $report = @()
     $arrUsedDisks = Get-View -ViewType VirtualMachine | % {$_.Layout} | % {$_.Disk} | % {$_.DiskFile}
@@ -507,7 +521,7 @@
         }
        } $report | Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'Zombie Disks'
    
-    Write-Host "(18/18) Zombi Disk Info Completed."
+    Write-Host "(19/19) Zombi Disk Info Completed."
        
 
     ######## MetaData ####################################################################################################
@@ -535,7 +549,7 @@
         New-Item -Path "C:\Scripts\AniaTools\Archives" -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
     }
     
-    #Compress the folder and place it to Archive folder. Delete the original folder ###############################################
+    ## Compress the folder and place it to Archive folder. Delete the original folder ###############################################
 
       Start-Sleep -s 10
       Compress-Archive -Path $source -DestinationPath $destination
@@ -545,8 +559,8 @@
 
     ######## Sent Report via Mail ####################################################################################################
     if ($sent_mail){
-       Write-Host "Sending mail."
-       send-mailmessage -from "NEW_ANIA_TOOLS@KYNDRYL.COM" -to "dimitrios.kakoulidis@kyndryl.com" -subject "ANIA: Weekly  DimiTools report $(get-date -f "dd-MM-yyyy")" -body 'Below you can find the Reporting_Tools excel file. Please see attachment `n `n `n' -Attachments $destination -smtpServer  192.168.21.16
+       Write-Host "Sending mail..."
+       send-mailmessage -from "NEW_ANIA_TOOLS@KYNDRYL.COM" -to "dimitrios.kakoulidis@kyndryl.com" -subject "ANIA: Weekly  DimiTools report $(get-date -f "dd-MM-yyyy")" -body 'Below you can find the Reporting Tools excel file. Please see attachment ' -Attachments $destination -smtpServer  192.168.21.16
     } 
 
     ###########################################################################################################################################
