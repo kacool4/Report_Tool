@@ -26,7 +26,12 @@ Alternative to RVTools a script with 1 liners and checks in order to report vmwa
    - 
 
 ## Updates :
- 
+  
+ (20/04/2022)
+   
+    - Added Template tab in the report
+    - Reordering some columns
+  
  (24/02/2022)
    
     - Minor changes/Fixes
