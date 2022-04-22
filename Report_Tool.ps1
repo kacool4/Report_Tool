@@ -560,7 +560,7 @@
     ######## Sent Report via Mail ####################################################################################################
     if ($sent_mail){
        Write-Host 'Sending mail...'
-       send-mailmessage -from 'NEW_TOOLS@KYNDRYL.COM' -to 'dimitrios.kakoulidis@kyndryl.com' -subject 'Customer Name: Weekly Tools report $(get-date -f 'dd-MM-yyyy')' -body 'Below you can find the Reporting Tools excel file. Please see attachment ' -Attachments $destination -smtpServer  192.168.21.16
+       send-mailmessage -from 'NEW_TOOLS@KYNDRYL.COM' -to 'dimitrios.kakoulidis@kyndryl.com' -subject "Customer Name: Weekly Tools report $(get-date -f 'dd-MM-yyyy')" -body 'Below you can find the Reporting Tools excel file. Please see attachment ' -Attachments $destination -smtpServer  192.168.21.16
     } 
 
     ###########################################################################################################################################
