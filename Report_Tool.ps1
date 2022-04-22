@@ -108,7 +108,7 @@
 
     if (!($Connect) -or ($sent_mail)) {
        Write-Host 'Connecting to vCenter...'
-       Connect-VIServer -Server $vCenter
+       Connect-VIServer $vCenter
        Write-Host 'Starting script.......'
     }  
 
