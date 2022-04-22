@@ -77,6 +77,11 @@ Alternative to RVTools a script with 1 liners and checks in order to report vmwa
    * Datastore --> Browse Datastore (We need this permission in order to search for Zombie files)
    * Global --> Licenses (We need this permission in order to view the licesnses)
 
+## Offline ImportExcel Module installation:
+* Download the zip file from github page [Here](https://github.kyndryl.net/Dimitrios-Kakoulidis/Report_Tool/blob/main/ImportExcel.zip)
+* Unzip and copy the folder to Powershell folder (C:\Program Files\WindowsPowerShell\Modules)
+* Open powershell command line and type "Import-Module -Name ImportExcel" 
+
 ## Configuration
 
 Specify the location of the List.txt or leave it as default (It will search for the file in the same folder as the script is stored)
