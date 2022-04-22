@@ -107,7 +107,7 @@ vCenter1,vCenter2,vCenter3,vCenter4
   ```
     Report_Tool.ps1               // By default it will run the script asks for credentials but no mail will be sent.
     Report_Tool.ps1 -noconnection // Will not ask for login. No mail will be sent.
-    Report_Tool.ps1 -Sent_mail    // Will ask for credentials and sent mail
+    Report_Tool.ps1 -mailreport   // Will ask for credentials and sent mail
     Report_Tool.ps1 -help         // Displays param options to run the script
     Report_Tool.ps1 -version      // Gives latest version of script
   ```
