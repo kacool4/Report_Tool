@@ -68,6 +68,7 @@ Alternative to RVTools a script with 1 liners and checks in order to report vmwa
 ## Requirements:
 * Windows Server 2012 and above or Windows 10
 * Powershell 5.1 and above
+* ImportExcel Module (Install-Module -Name ImportExcel  or check below on how to install it offline) 
 * PowerCLI 12.0 + either standalone or import the module in Powershell (Preferred)
 * A text file "List.txt" in order to specify the vCenters to take report from
 
