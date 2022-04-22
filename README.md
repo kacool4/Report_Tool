@@ -72,6 +72,11 @@ Alternative to RVTools a script with 1 liners and checks in order to report vmwa
 * PowerCLI 12.0 + either standalone or import the module in Powershell (Preferred)
 * A text file "List.txt" in order to specify the vCenters to take report from
 
+## User Role Creation:
+* Create a new Role in vCenter with the following permissions
+   * Datastore --> Browse Datastore (We need this permission in order to search for Zombie files)
+   * Global --> Licenses (We need this permission in order to view the licesnses)
+
 ## Configuration
 
 Specify the location of the List.txt or leave it as default (It will search for the file in the same folder as the script is stored)
