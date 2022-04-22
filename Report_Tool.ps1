@@ -53,10 +53,10 @@
 
     # Get Date and create folder
         $Date = (Get-Date -f 'ddMMyyyy')
-        New-Item -Path "C:\Scripts\AniaTools\$Date" -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
-        $folder = 'C:\Scripts\AniaTools\'+$Date+'\'
+        New-Item -Path "C:\Scripts\DimiTools\$Date" -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+        $folder = 'C:\Scripts\DimiTools\'+$Date+'\'
         $source = $folder
-        $destination = 'C:\Scripts\AniaTools\Archives\'+$Date+'.zip'
+        $destination = 'C:\Scripts\DimiTools\Archives\'+$Date+'.zip'
         $Connect=$false
         $sent_mail=$false
 
@@ -95,7 +95,7 @@
 
     # Start Collecting Info  #####################################################################################################
 
-    foreach($line in Get-Content C:\Scripts\AniaTools\list.txt) 
+    foreach($line in Get-Content C:\Scripts\DimiTools\list.txt) 
     {
 
 
@@ -108,9 +108,8 @@
 
     if (!($Connect) -or ($sent_mail)) {
        Write-Host 'Connecting to vCenter...'
-       $creds = Get-VICredentialStoreItem -file 'C:\Scripts\AniaTools\credfile.xml'
-       Connect-VIServer -Server $creds.Host -User $creds.User -Password $creds.Password
-        Write-Host 'Starting script.......'
+       Connect-VIServer -Server $vCenter
+       Write-Host 'Starting script.......'
     }  
 
     ######## VM Info output ##################################################################################################
@@ -546,8 +545,8 @@
      
     ###### Check if Archive folder exists. If not it will create it ################################################################
     
-    if (-Not (Test-Path -Path 'C:\Scripts\AniaTools\Archives')) {
-        New-Item -Path 'C:\Scripts\AniaTools\Archives' -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+    if (-Not (Test-Path -Path 'C:\Scripts\DimiTools\Archives')) {
+        New-Item -Path 'C:\Scripts\DimiTools\Archives' -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
     }
     
     ## Compress the folder and place it to Archive folder. Delete the original folder ###############################################
@@ -561,7 +560,7 @@
     ######## Sent Report via Mail ####################################################################################################
     if ($sent_mail){
        Write-Host 'Sending mail...'
-       send-mailmessage -from 'NEW_ANIA_TOOLS@KYNDRYL.COM' -to 'dimitrios.kakoulidis@kyndryl.com' -subject 'ANIA: Weekly  DimiTools report $(get-date -f 'dd-MM-yyyy')' -body 'Below you can find the Reporting Tools excel file. Please see attachment ' -Attachments $destination -smtpServer  192.168.21.16
+       send-mailmessage -from 'NEW_TOOLS@KYNDRYL.COM' -to 'dimitrios.kakoulidis@kyndryl.com' -subject 'Customer Name: Weekly Tools report $(get-date -f 'dd-MM-yyyy')' -body 'Below you can find the Reporting Tools excel file. Please see attachment ' -Attachments $destination -smtpServer  192.168.21.16
     } 
 
     ###########################################################################################################################################
