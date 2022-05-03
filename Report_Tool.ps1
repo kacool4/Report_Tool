@@ -154,7 +154,7 @@
                                   @{N='Format';E={$_.StorageFormat}}, 
                                   @{N='SCSI  id';E={$hd = $_
                                                 $ctrl = $hd.Parent.Extensiondata.Config.Hardware.Device | where{$_.Key -eq $hd.ExtensionData.ControllerKey} 
-                                               '$($ctrl.BusNumber):$($_.ExtensionData.UnitNumber)'}},
+                                               "$($ctrl.BusNumber):$($_.ExtensionData.UnitNumber)"}},
                                   @{N='VMDK Location';E={$_.Filename}}| Export-Excel -Append -AutoSize –Path $outputpath -WorksheetName 'VM Disk'
     
     Write-Host '(3/19) Disk Info Completed'                             
