@@ -503,13 +503,13 @@
           $rootPath = '[' + $ds.Name + ']'
           $searchResult = $dsBrowser.SearchDatastoreSubFolders($rootPath, $searchSpec)
 
-          foreach ($folder in $searchResult){
-            foreach ($fileResult in $folder.File){
+          foreach ($folders in $searchResult){
+            foreach ($fileResult in $folders.File){
             if ($fileResult.Path){
              if ($fileResult.Path -notmatch '-flat.vmdk|-ctk.vmdk|-delta.vmdk|-rdmp.vmdk' -and
-                    (-not ($arrUsedDisks -contains ($folder.FolderPath + $fileResult.Path)))){
+                    (-not ($arrUsedDisks -contains ($folders.FolderPath + $fileResult.Path)))){
                     $row = '' | Select @{N='Cluster';E={$strDatastore.Name}},
-                                       @{N='Path';E={$folder.FolderPath}},
+                                       @{N='Path';E={$folders.FolderPath}},
                                        @{N='File';E={$fileResult.Path}},
                                        @{N='Size in GB';E={[math]::round($fileResult.FileSize/(1024 * 1024 * 1024),3)}},
                                        @{N='Date Last modifided';E={$fileResult.Modification}}
