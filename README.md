@@ -26,6 +26,11 @@ Alternative to RVTools a script with 1 liners and checks in order to report vmwa
    - 
 
 ## Updates :
+
+  (06/05/2022)
+   
+    - Added Disk Partition tab in the report
+    - Added Note info on VM Tab
   
  (20/04/2022)
    
